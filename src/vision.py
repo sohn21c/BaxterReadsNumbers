@@ -85,24 +85,35 @@ def main(cap):
     box_bool= False
     #Draw RED bounding box
     if len(yellowContours) > 1:
+    	if (len(yellowContours)>10):
+    		num_items = 10
+    	else:
+    		num_items = len(yellowContours)
+    	for k in range(num_items):
+    		objects = sorted(yellowContours, key=cv2.contourArea, reverse=True)
+    		contours = objects[num_items-k-1]
 
-    	#objects = sorted(yellowContours, key=cv2.contourArea, reverse=True)
-    	#contours = objects[1]
-
-        contours = max(yellowContours, key=cv2.contourArea)
-        rect = cv2.minAreaRect(contours)
-        ((x,y),radius) =cv2.minEnclosingCircle(contours)
-        box = np.int0(cv2.boxPoints(rect)) 
-        box_bool = True     
-        number = (y_dilation[int(rect[0][1]-(rect[1][1]/2.5)):int((rect[1][1]/2.5)+rect[0][1]), int(rect[0][0]-(rect[1][0]/2.5)):int((rect[1][0]/2.5)+rect[0][0])] )
-        number = cv2.flip(number, 1)
-        gray = cv2.resize(255 - number, (28, 28))
-        #M = cv2.getRotationMatrix2D((int(rect[1][0])/2,int(rect[1][1])/2),rect[3],1)
-        #number = cv2.warpAffine(number,M,(cols,rows))            
+        	#contours = max(yellowContours, key=cv2.contourArea)
+        	rect = cv2.minAreaRect(contours)
+        	((x,y),radius) =cv2.minEnclosingCircle(contours)
+        	box = np.int0(cv2.boxPoints(rect)) 
+        	box_bool = True 
+        	number = (y_dilation[int(rect[0][1]-(rect[1][1]/2.5)):int((rect[1][1]/2.5)+rect[0][1]), int(rect[0][0]-(rect[1][0]/2.5)):int((rect[1][0]/2.5)+rect[0][0])] )
+        	number = cv2.flip(number, 1)
+        	boo = False
+        	try:
+        		gray = cv2.resize(255 - number, (28, 28))
+        		rows,cols = gray.shape
+        		boo = True
+        	except:
+        		pass 
+        	if (boo):    
+        		M = cv2.getRotationMatrix2D((cols/2,cols/2),-rect[2],1)
+        		gray = cv2.warpAffine(gray,M,(cols,rows))     
         #check if big enough, else reject and don't draw bounding box
-        if radius > 25:
-            cv2.drawContours(frame,[box],0,(0,0,0),1)
-            cv2.circle(frame, (int(x),int(y)), int(radius), color=(150,150,150), thickness=1, lineType=8, shift=0) 
+        		if radius > 25:
+        			cv2.drawContours(frame,[box],0,(0,0,0),1)
+         #    	cv2.circle(frame, (int(x),int(y)), int(radius), color=(150,150,150), thickness=1, lineType=8, shift=0) 
 
     #Draw Yellow (green) bounding box
     # if len(yellowContours) > 0:
@@ -125,18 +136,22 @@ def main(cap):
     cv2.imshow('Yellow',y_dilation)
     cv2.imshow('Tracker',frame)
     if(box_bool):
+
         try:
+            cv2.imshow('Number', number)
             cv2.imshow('Numbers', gray)
-            pred = classo(gray)
+            pred,conf = classo(gray)
             char_im = cv2.imread("/home/jordan/baxterws/src/baxter_fun/src/"+str(pred)+".png",cv2.IMREAD_COLOR)
             cv2.imshow('face',char_im)
             msg = cv_bridge.CvBridge().cv2_to_imgmsg(char_im, encoding="bgr8")
             pub = rospy.Publisher('/robot/xdisplay', Image, latch=True, queue_size=1)
             pub.publish(msg)
+            if (conf>2):
+                pub = rospy.Publisher('co-ords', String)
+                pub.publish(str(x)+'&'+str(y)+'&'+str(width)+'&'+str(height))
         except  Exception as e:
             rospy.loginfo(e)
-    pub = rospy.Publisher('co-ords', String)
-    pub.publish(str(x)+'&'+str(y)+'&'+str(width)+'&'+str(height))
+
     #print((x,y))
         
  #        key = cv2.waitKey(1) & 0xFF
@@ -249,7 +264,7 @@ def classo(X):
 	if (pred_arr[pred]>2):
 		rospy.loginfo(pred_arr)
 		rospy.loginfo(pred)
-	return(pred)
+	return(pred,pred_arr[pred])
 
 def images():
 	img0 = cv2.imread('0.png',0)
