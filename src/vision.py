@@ -2,7 +2,9 @@
 
 import sys
 import os
+import os.path
 import cv2
+import math
 import numpy as np
 import time
 import heapq
@@ -11,11 +13,27 @@ import cv_bridge
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 import rospkg
-
+from scipy import ndimage
 from std_msgs.msg import String, Float32MultiArray
 
 bridge = CvBridge()
 new_image = 0
+
+def getBestShift(img):
+    cy,cx = ndimage.measurements.center_of_mass(img)
+
+    rows,cols = img.shape
+    shiftx = np.round(cols/2.0-cx).astype(int)
+    shifty = np.round(rows/2.0-cy).astype(int)
+
+    return shiftx,shifty
+
+def shift(img,sx,sy):
+    rows,cols = img.shape
+    M = np.float32([[1,0,sx],[0,1,sy]])
+    shifted = cv2.warpAffine(img,M,(cols,rows))
+    return shifted
+
 
 def main(cap):
     frame = cap
@@ -83,7 +101,10 @@ def main(cap):
     x=-1
     y=-1
     box_bool= False
+    confidences = {'1': 0, '2': 0,'3': 0,'4': 0,'5': 0,'6': 0,'7': 0,'8': 0,'9': 0,'0': 0}
+    blocks = {'1': [0, 0, 0], '2': [0, 0, 0],'3': [0, 0, 0],'4': [0, 0, 0],'5': [0, 0, 0],'6': [0, 0, 0],'7': [0, 0, 0],'8': [0, 0, 0],'9': [0, 0, 0],'0': [0, 0, 0]}
     #Draw RED bounding box
+    frame1  = frame
     if len(yellowContours) > 1:
     	if (len(yellowContours)>10):
     		num_items = 10
@@ -98,22 +119,85 @@ def main(cap):
         	((x,y),radius) =cv2.minEnclosingCircle(contours)
         	box = np.int0(cv2.boxPoints(rect)) 
         	box_bool = True 
-        	number = (y_dilation[int(rect[0][1]-(rect[1][1]/2.5)):int((rect[1][1]/2.5)+rect[0][1]), int(rect[0][0]-(rect[1][0]/2.5)):int((rect[1][0]/2.5)+rect[0][0])] )
+        	number = (frame[int(rect[0][1]-(rect[1][1]/2.5)):int((rect[1][1]/2.5)+rect[0][1]), int(rect[0][0]-(rect[1][0]/2.5)):int((rect[1][0]/2.5)+rect[0][0])] )
         	number = cv2.flip(number, 1)
         	boo = False
-        	try:
-        		gray = cv2.resize(255 - number, (28, 28))
-        		rows,cols = gray.shape
-        		boo = True
-        	except:
-        		pass 
-        	if (boo):    
-        		M = cv2.getRotationMatrix2D((cols/2,cols/2),-rect[2],1)
-        		gray = cv2.warpAffine(gray,M,(cols,rows))     
+        	if(radius > 25):
+        		cv2.drawContours(frame,[box],0,(0,0,0),1)
+        		#gray = number
+        	gray = cv2.cvtColor(number, cv2.COLOR_HSV2BGR );
+        	gray = cv2.cvtColor(number, cv2.COLOR_BGR2GRAY );
+        	(thresh, gray) = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+        	gray = cv2.resize(255 - gray, (28, 28))
+        	cols, rows = gray.shape
+        	# M = cv2.getRotationMatrix2D((cols/2,cols/2),-rect[2],1)
+        	# gray = cv2.warpAffine(gray,M,(cols,rows)) 
+        	pred,conf = classo(gray)
+        	if (pred ==3):
+        		pred = 8
+        	elif (pred ==8):
+        		pred = 3
+        	if (conf>1.9):
+        		if (blocks[str(pred)][0]==0):
+        			blocks[str(pred)] = (x,y,radius)
+        	boo = True
+        	order = sorted(confidences, key=confidences.__getitem__, reverse=True)
+        for k in [4,1,2,7,0,5,6,8,3,9]:
+        	print(blocks)
+        	if (blocks[str(k)][0]!=0):
+        		frame1 = cv2.putText(frame1, str(k), (int(blocks[str(k)][0]), int(blocks[str(k)][1])), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 200, 0), 2, cv2.LINE_AA)
+        		rospy.loginfo(k)
+
+
+
+
+
+
+
+
+        		# while np.sum(gray[0]) == 0:
+        		# 	gray = gray[1:]
+        		# while np.sum(gray[:,0]) == 0:
+        		# 	gray = np.delete(gray,0,1)
+
+        		# while np.sum(gray[-1]) == 0:
+        		# 	gray = gray[:-1]
+
+        		# while np.sum(gray[:,-1]) == 0:
+        		# 	gray = np.delete(gray,-1,1)
+
+        		# rows,cols = gray.shape
+        		# if rows > cols:
+        		# 	factor = 20.0/rows
+        		# 	rows = 20
+        		# 	cols = int(round(cols*factor))
+        		# 	gray = cv2.resize(gray, (cols,rows))
+        		# else:
+        		# 	factor = 20.0/cols
+        		# 	cols = 20
+        		# 	rows = int(round(rows*factor))
+        		# 	gray = cv2.resize(gray, (cols, rows))
+        		# colsPadding = (int(math.floor((28-cols)/2.0)),int(math.ceil((28-cols)/2.0)))
+        		# rowsPadding = (int(math.floor((28-rows)/2.0)),int(math.ceil((28-rows)/2.0)))
+        		# gray = np.pad(gray,(rowsPadding,colsPadding),'constant')
+        		# shiftx,shifty = getBestShift(gray)
+        		# shifted = shift(gray,shiftx,shifty)
+        		# gray = shifted
+        		# print(gray.shape)  
+        		#M = cv2.getRotationMatrix2D((cols/2,cols/2),-rect[2],1)
+        		#gray = cv2.warpAffine(gray,M,(cols,rows)) 
+        		#if (os.path.isfile("/home/jordan/baxterws/src/baxter_fun/src/number.jpg")==False):
+        		#	rospy.loginfo("no file")
+        		#cv2.imwrite( "/home/jordan/baxterws/src/baxter_fun/src/number.jpg", gray)
+        		#else:
+        		#	rospy.loginfo("exists")
+
         #check if big enough, else reject and don't draw bounding box
-        		if radius > 25:
-        			cv2.drawContours(frame,[box],0,(0,0,0),1)
+        	if(radius > 25):
+        		cv2.drawContours(frame1,[box],0,(0,0,0),1)
          #    	cv2.circle(frame, (int(x),int(y)), int(radius), color=(150,150,150), thickness=1, lineType=8, shift=0) 
+        #if(box_bool):
+  
 
     #Draw Yellow (green) bounding box
     # if len(yellowContours) > 0:
@@ -134,33 +218,29 @@ def main(cap):
     path = rospack.get_path('baxter_fun')
     cv2.imshow('Red',r_dilation)
     cv2.imshow('Yellow',y_dilation)
-    cv2.imshow('Tracker',frame)
+    cv2.imshow('Tracker',frame1)
     if(box_bool):
-
+    	cv2.imshow('Number', number)
+    	cv2.imshow('Numbers', gray)
+    if(box_bool):
         try:
             cv2.imshow('Number', number)
             cv2.imshow('Numbers', gray)
             pred,conf = classo(gray)
             char_im = cv2.imread("/home/jordan/baxterws/src/baxter_fun/src/"+str(pred)+".png",cv2.IMREAD_COLOR)
             cv2.imshow('face',char_im)
-            msg = cv_bridge.CvBridge().cv2_to_imgmsg(char_im, encoding="bgr8")
-            pub = rospy.Publisher('/robot/xdisplay', Image, latch=True, queue_size=1)
-            pub.publish(msg)
+            
             if (conf>2):
+                char_im = cv2.imread("/home/jordan/baxterws/src/baxter_fun/src/"+str(pred)+".png",cv2.IMREAD_COLOR)
+            	cv2.imshow('face',char_im)
+            	msg = cv_bridge.CvBridge().cv2_to_imgmsg(char_im, encoding="bgr8")
+            	pub = rospy.Publisher('/robot/xdisplay', Image, latch=True, queue_size=1)
+            	pub.publish(msg)
                 pub = rospy.Publisher('co-ords', String)
                 pub.publish(str(x)+'&'+str(y)+'&'+str(width)+'&'+str(height))
         except  Exception as e:
             rospy.loginfo(e)
 
-    #print((x,y))
-        
- #        key = cv2.waitKey(1) & 0xFF
-    # # if the `q` key was pressed, break from the loop
- #        if key == 'q':
- #            break
-    
- #    #cap.release()
- #    cv2.destroyAllWindows()
     
 
 def nothing(self):
@@ -234,6 +314,15 @@ def listener():
     rospy.Subscriber("/usb_cam/image_raw", Image, callback)
      # spin() simply keeps python from exiting until this node is stopped
 
+# def keras_model():
+# 	yaml_file = open('CNN1.yaml', 'r')
+# 	loaded_model_yaml = yaml_file.read()
+# 	yaml_file.close()
+# 	loaded_model = model_from_yaml(loaded_model_yaml)
+# 	# load weights into new model
+# 	loaded_model.load_weights("model.h5")
+# 	print("Loaded model from disk")
+
 def model(x,w):
     fx = x.flatten()
     a = w[0] + np.dot(fx.T,w[1:])
@@ -262,8 +351,9 @@ def classo(X):
 	pred = np.argmax(model(X,weights))
 	pred_arr = model(X,weights)
 	if (pred_arr[pred]>2):
-		rospy.loginfo(pred_arr)
-		rospy.loginfo(pred)
+		pass
+		#rospy.loginfo(pred_arr)
+		#rospy.loginfo(pred)
 	return(pred,pred_arr[pred])
 
 def images():
