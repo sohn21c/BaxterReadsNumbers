@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>number_baxter</name>
+  <name>baxterpicknumber</name>
   <version>0.0.0</version>
-  <description>The number_baxter package</description>
+  <description>The baxterpicknumber package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="james@todo.todo">james</maintainer>
+  <maintainer email="jingyan@todo.todo">jingyan</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/number_baxter</url> -->
+  <!-- <url type="website">http://wiki.ros.org/baxterpicknumber</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->
@@ -52,42 +52,36 @@
   <build_depend>actionlib</build_depend>
   <build_depend>baxter_core_msgs</build_depend>
   <build_depend>baxter_interface</build_depend>
-  <build_depend>baxter_maintenance_msgs</build_depend>
-  <build_depend>control_msgs</build_depend>
+  <build_depend>baxter_moveit_config</build_depend>
+  <build_depend>baxter_tools</build_depend>
   <build_depend>cv_bridge</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>moveit_core</build_depend>
-  <build_depend>moveit_ros_planning_interface</build_depend>
-  <build_depend>roscpp</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>trajectory_msgs</build_depend>
+  <build_depend>xacro</build_depend>
   <build_export_depend>actionlib</build_export_depend>
   <build_export_depend>baxter_core_msgs</build_export_depend>
   <build_export_depend>baxter_interface</build_export_depend>
-  <build_export_depend>baxter_maintenance_msgs</build_export_depend>
-  <build_export_depend>control_msgs</build_export_depend>
+  <build_export_depend>baxter_moveit_config</build_export_depend>
+  <build_export_depend>baxter_tools</build_export_depend>
   <build_export_depend>cv_bridge</build_export_depend>
-  <build_export_depend>geometry_msgs</build_export_depend>
-  <build_export_depend>moveit_core</build_export_depend>
-  <build_export_depend>moveit_ros_planning_interface</build_export_depend>
-  <build_export_depend>roscpp</build_export_depend>
+  <build_export_depend>dynamic_reconfigure</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>sensor_msgs</build_export_depend>
   <build_export_depend>trajectory_msgs</build_export_depend>
+  <build_export_depend>xacro</build_export_depend>
   <exec_depend>actionlib</exec_depend>
   <exec_depend>baxter_core_msgs</exec_depend>
   <exec_depend>baxter_interface</exec_depend>
-  <exec_depend>baxter_maintenance_msgs</exec_depend>
-  <exec_depend>control_msgs</exec_depend>
+  <exec_depend>baxter_moveit_config</exec_depend>
+  <exec_depend>baxter_tools</exec_depend>
   <exec_depend>cv_bridge</exec_depend>
-  <exec_depend>geometry_msgs</exec_depend>
-  <exec_depend>moveit_core</exec_depend>
-  <exec_depend>moveit_ros_planning_interface</exec_depend>
-  <exec_depend>roscpp</exec_depend>
+  <exec_depend>dynamic_reconfigure</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>trajectory_msgs</exec_depend>
+  <exec_depend>xacro</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

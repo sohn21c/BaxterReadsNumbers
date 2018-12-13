@@ -1,0 +1,14 @@
+<launch>
+
+  <!-- <arg name="Tvalue" default="20" /> -->
+
+  <!-- Start the baxter interface package -->
+    <node name="joint_trajectory_action_server" pkg="baxter_interface" type="joint_trajectory_action_server.py" />
+
+    <include file="$(find baxter_moveit_config)/launch/baxter_grippers.launch">
+
+    </include>
+     <node name="movepickandplace_joint_target" pkg="baxterpicknumber" type="move_joint_target.py" output="screen" />
+    
+
+</launch>

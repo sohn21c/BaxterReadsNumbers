@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>camera_info_manager_node</name>
+  <version>0.0.1</version>
+  <description>
+	Simple package that uses 'camera_info_manager_py' to provide a
+	reconfigurable node capable of publishing a camera_info topic without a
+	camera driver. Useful for bag files where you forgot to bag the camera info
+	data, for situations where a robot provides a default calibration but you'd
+	like to try a different calibration, and more.
+  </description>
+
+  <maintainer email="schultzjarvis@gmail.com">Jarvis Schultz</maintainer>
+
+  <license>MIT</license>
+
+  <author email="schultzjarvis@gmail.com">Jarvis Schultz</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+
+</package>

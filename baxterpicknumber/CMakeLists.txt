@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(number_baxter)
+project(baxterpicknumber)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,23 +8,17 @@ project(number_baxter)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  message_generation
-  message_runtime
-  nav_msgs
-  std_msgs
   actionlib
   baxter_core_msgs
   baxter_interface
-  baxter_maintenance_msgs
-  control_msgs
+  baxter_moveit_config
+  baxter_tools
   cv_bridge
-  geometry_msgs
-  moveit_core
-  moveit_ros_planning_interface
-  roscpp
+  dynamic_reconfigure
   rospy
   sensor_msgs
   trajectory_msgs
+  xacro
 )
 
 ## System dependencies are found with CMake's conventions
@@ -84,7 +78,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   baxter_core_msgs#   baxter_maintenance_msgs#   control_msgs#   geometry_msgs#   sensor_msgs#   trajectory_msgs
+#   baxter_core_msgs#   sensor_msgs#   trajectory_msgs
 # )
 
 ################################################
@@ -118,8 +112,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES number_baxter
-#  CATKIN_DEPENDS actionlib baxter_core_msgs baxter_interface baxter_maintenance_msgs control_msgs cv_bridge geometry_msgs moveit_core moveit_ros_planning_interface roscpp rospy sensor_msgs trajectory_msgs
+#  LIBRARIES baxterpicknumber
+#  CATKIN_DEPENDS actionlib baxter_core_msgs baxter_interface baxter_moveit_config baxter_tools cv_bridge dynamic_reconfigure rospy sensor_msgs trajectory_msgs xacro
 #  DEPENDS system_lib
 )
 
@@ -136,7 +130,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/number_baxter.cpp
+#   src/${PROJECT_NAME}/baxterpicknumber.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -147,7 +141,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/number_baxter_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/baxterpicknumber_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -204,7 +198,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_number_baxter.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_baxterpicknumber.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

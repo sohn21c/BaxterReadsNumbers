@@ -1,0 +1,27 @@
+<launch>
+  <node name="left_hand_calibration" pkg="camera_info_manager_node" type="camera_info_manager_node">
+  	
+  	<param name="cname" value="narrow_stereo"/>
+  	<param name="url" value="package://camera_info_manager_node/narrow_stereo.yaml"/>
+  </node>
+
+
+  <node name="usb_cam" pkg="usb_cam" type="usb_cam_node"  >
+    <param name="video_device" value="/dev/video0" />
+    <param name="image_width" value="1280" />
+    <param name="image_height" value="720" />
+    <param name="pixel_format" value="yuyv" />
+    <param name="camera_name" value="tracker_camera"/>
+    <param name="camer_frame_id" value="overhead_camera"/>
+  </node>
+
+
+   <include file="$(find baxter_fun)/launch/ar_tracker.launch">
+    </include>
+
+
+  <node name="number_rec" pkg="baxter_fun" type="vision.py" />
+
+
+  <node name="pixel_convert" pkg="baxterpicknumber" type="pixelconvert.py"  output="screen"/>
+</launch>

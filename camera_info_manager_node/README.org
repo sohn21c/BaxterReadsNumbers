@@ -1,0 +1,77 @@
+#+OPTIONS: ^:nil toc:nil tex:t p:t timestamp:nil
+
+* Introduction
+
+This is a very simple ROS package that provides a single node aimed at loading
+camera calibration info from disk and publishing it on a =camera_info= topic.
+Nearly all significant functionality from this node is provided by the
+[[http://wiki.ros.org/camera_info_manager_py][camera_info_manager_py]] package. Normally, a camera driver incorporates the
+functionality of =camera_info_manager_py= or =camera_info_manager= directly into
+the driver. *This is the preferred and default mode of operation.*
+
+However, in some situations this particular node may still prove useful. Here
+are a few example situations where one could use this node.
+
++ Bagged Data :: Let's say you bagged raw image data from a camera, but you
+                 forgot to bag the camera calibration data as well. One option
+                 would be to repair the bag file using one of the available
+                 =rosbag= APIs to insert the missing camera data, but perhaps an
+                 easier option would be to run this package to publish the
+                 corresponding =camera_info= topic at the same time as playing
+                 back the bag file.
+
++ Comparing Calibrations :: Let's say you are using [[http://wiki.ros.org/image_geometry][image_geometry]] to perform
+     some real-world measurements with a camera, and you would like to compare
+     the relative accuracy of two different camera calibrations. You could
+     easily run a single camera driver that loads up one of the calibrations,
+     and then use [[http://wiki.ros.org/topic_tools/relay][topic_tools relay]] to relay the raw camera data to a new topic
+     or namespace. Then you could use this package to load the second camera
+     calibration on a different topic.
+
++ Manufacturer Provided Calibrations :: Some cameras that I've encountered
+     provide calibration info out-of-the-box, and overriding that calibration
+     info is not always easy. This package would provide a relatively simple way
+     of loading an additional camera calibration topic for you to use.
+
+
+* Usage
+
+  The package only provides a single node =camera_info_manager_node= that
+  essentially only instantiates an instance of the
+  =camera_info_manager.CameraInfoManager= class, and then publishes the loaded
+  camera data on the =camera_info= topic at a set frequency. As a result, nearly
+  all of the documentation for the relevant parameters, topics, and services is
+  found in the [[http://wiki.ros.org/camera_info_manager_py][camera_info_manager_py package]]. For convenience, I'll provide a
+  brief description below:
+
+** Published Topics
+   + =camera_info= :: Contains camera calibration info as a standard
+                      =sensor_msgs/CameraInfo= message
+
+** Services
+   + =set_camera_info= :: A standard =sensor_msgs/SetCameraInfo= service that
+        allows you to modify data being published on =camera_info=. Calling this
+        service will not modify a loaded YAML file.
+
+** Parameters
+   + =~freq= :: (default: 10) A float that says the frequency that you'd like to
+                publish the =camera_info= topic at.
+   + =~cname= :: (default: 'camera') A string representing the camera name. This
+                 should match the name in whichever YAML calibration file is
+                 loaded. If you don't specify the =~url= parameter, then this
+                 can also be used to automatically find the correct YAML file in
+                 =~/.ros/camera_info/=
+   + =~url= :: (default: '') A string representing a Uniform Resource Locator for
+               the YAML file that you want to load. Examples from the documentation:
+			   #+BEGIN_EXAMPLE
+			   - `file:///full/path/to/local/file.yaml`
+			   - `package://camera_info_manager_py/tests/test_calibration.yaml`
+			   - `package://ros_package_name/calibrations/camera3.yaml`
+			   #+END_EXAMPLE
+			   Note you can also use =${NAME}= and =${ROS_HOME}= substitution variables.
+   + =~namespace= :: (default: '') A string representing a string that you'd
+                     like to prepend to the =set_camera_info= service. Often it
+                     may be preferable to use the =ns= roslaunch attribute or
+                     the =__ns= key with rosrun.
+
+

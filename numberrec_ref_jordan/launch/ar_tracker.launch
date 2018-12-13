@@ -1,0 +1,17 @@
+<launch>
+    <arg name="marker_size"          default="12" />
+    <arg name="max_new_marker_error" default="0.05" />
+    <arg name="max_track_error"      default="0.05" />
+    <arg name="cam_image_topic1"      default="/cameras/left_hand_camera/image" />
+    <arg name="cam_info_topic1"       default="/camera_info" />
+    <arg name="output_frame1"         default="left_hand_camera" />
+    <arg name="cam_image_topic2"      default="/usb_cam/image_raw" />
+    <arg name="cam_info_topic2"       default="/usb_cam/camera_info" />
+    <arg name="output_frame2"         default="overhead_camera" />
+
+ 
+    <node name="ar_track_alvar1" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic1) $(arg cam_info_topic1) $(arg output_frame1)"/>
+
+    <node name="ar_track_alvar2" pkg="ar_track_alvar" type="individualMarkersNoKinect" respawn="false" output="screen" args="$(arg marker_size) $(arg max_new_marker_error) $(arg max_track_error) $(arg cam_image_topic2) $(arg cam_info_topic2) $(arg output_frame2)"/>
+
+</launch>
