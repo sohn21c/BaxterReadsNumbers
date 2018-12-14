@@ -14,7 +14,7 @@ def prime(a):
     if(a==2):
         return True
     else:
-        for j in range(2,round(sqrt(a))+1):
+        for j in range(2,int(round(sqrt(a)))+1):
             if(a%j==0):
                 judge=1
             break
@@ -24,7 +24,7 @@ def prime(a):
             return False
 
 def forprint(N):
-    for i in range(2,round(sqrt(N))+1,1):
+    for i in range(2,int(round(sqrt(N)))+1,1):
         if(N%i==0):
             x.append(i)
             break
@@ -39,7 +39,7 @@ def forprint(N):
         return x
 
 def decompose(N):
-    for i in range(2,round(sqrt(N))+1,1):
+    for i in range(2,int(round(sqrt(N)))+1,1):
         if(N%i==0):
             x.append(i)
             break
@@ -58,9 +58,9 @@ def decompose(N):
 	if raw_result[i]>=10:
 		temp1 = raw_result[i]%10
 		temp2 = (raw_result[i]-temp1)/10
-		final_result(t) = temp1
-		final_result(t+1) = 10
-		final_result(t+2) = temp2
+		final_result[t] = temp1
+		final_result[t+1] = 10
+		final_result[t+2] = temp2
 		t = t+3
 	if raw_result[i]<10:
 		final_result[t]
@@ -77,7 +77,7 @@ def publish():
     while not rospy.is_shutdown():
 
       print "Please enter a number from 1 to 100"
-      N = raw_input()
+      N = float(raw_input())
       data = decompose(N)
       rawmsg = forprint(N)
       print (N,'=',rawmsg)

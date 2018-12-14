@@ -20,8 +20,8 @@
     </include>
 
 
-  <node name="number_rec" pkg="baxter_fun" type="vision.py" />
+  <node name="number_rec" pkg="baxter_fun" type="vision2.py" output="screen"/>
 
 
-  <node name="pixel_convert" pkg="baxterpicknumber" type="pixelconvert.py"  output="screen"/>
+  <!-- <node name="pixel_convert" pkg="baxterpicknumber" type="pixelconvert.py"  output="screen"/> -->
 </launch>

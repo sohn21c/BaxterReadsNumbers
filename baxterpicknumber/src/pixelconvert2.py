@@ -143,33 +143,79 @@ class tfcovert():
         rospy.wait_for_service('blockLocator')
         find_block = rospy.ServiceProxy('blockLocator', BlockLocator)
         checknumber = 'y'
-
         targetnumber=raw_input("=====Enter the number you want==========")
+        if len(targetnumber)>1:
+            if len(targetnumber)>1:
+                number = int(targetnumber)
+                multipliers = []
+                answer = number
+                for k in range(9):
+                    for i in [9,8,7,6,5,4,3,2]:
+                        if(answer%i == 0):
+                            multipliers.append(str(i))
+                            answer = answer/i
+                            print answer
+                            break
+                if (answer == 1):
+                    print("success")
+                    print(multipliers)
+                    numbers = []
+                    
+                    for j in (multipliers):
+                        self.found=False
+                        while(self.found==False):
+                            resp1 = find_block(j)
+                            if(resp1.str=="Na"):
+                                continue
+                            else:
+                                self.found = True
+                                break
+                        numbers.append(resp1)
+                    print("here")
+                    print (numbers)
+                    for num in numbers:
+                        coord_block_pixel = num.str.split("&")
+                        rospy.loginfo(str(coord_block_pixel))
+                        block_pixel_x=float(coord_block_pixel[0])
+                        block_pixel_y=float(coord_block_pixel[1])
+                        block_pixel_theta=0#float(coord_block_pixel[2])
+                        real_base=self.pixel_to_real_pink_approach(block_pixel_x,block_pixel_y,block_pixel_theta)
+                        real_base=np.append(real_base,np.array([[block_pixel_theta]]),axis=0)
+                        rospy.loginfo(str(real_base))
+            
+                        self.target_publisher.publish(targetnumber+"&"+str(real_base[0][0])+"&"+str(real_base[1][0])+"&"+str(real_base[2][0])+"&"+str(real_base[3][0]))
+                        continue_flag = 'n'
+                        while(continue_flag == 'n'):
+                            continue_flag=raw_input("=====Continue==========")
+                            pass
 
+                else:
+                    print("sorry")
+
+        else:
+            # while not rospy.is_shutdown():
+            self.found=False
         
-        # while not rospy.is_shutdown():
-        self.found=False
-    
-        while(self.found==False):
-            resp1 = find_block(targetnumber)
-            if(resp1.str=="Na"):
-                continue
-            else:
-                self.found = True
-                break
-        # rospy.loginfo(resp1)
-            # except rospy.ServiceException as exc:
-        # print("Service did not process request: " + str(exc))
-        coord_block_pixel = resp1.str.split("&")
-        rospy.loginfo(str(coord_block_pixel))
-        block_pixel_x=float(coord_block_pixel[0])
-        block_pixel_y=float(coord_block_pixel[1])
-        block_pixel_theta=0#float(coord_block_pixel[2])
-        real_base=self.pixel_to_real_pink_approach(block_pixel_x,block_pixel_y,block_pixel_theta)
-        real_base=np.append(real_base,np.array([[block_pixel_theta]]),axis=0)
-        rospy.loginfo(str(real_base))
-        
-        self.target_publisher.publish(targetnumber+"&"+str(real_base[0][0])+"&"+str(real_base[1][0])+"&"+str(real_base[2][0])+"&"+str(real_base[3][0]))
+            while(self.found==False):
+                resp1 = find_block(targetnumber)
+                if(resp1.str=="Na"):
+                    continue
+                else:
+                    self.found = True
+                    break
+            # rospy.loginfo(resp1)
+                # except rospy.ServiceException as exc:
+            # print("Service did not process request: " + str(exc))
+            coord_block_pixel = resp1.str.split("&")
+            rospy.loginfo(str(coord_block_pixel))
+            block_pixel_x=float(coord_block_pixel[0])
+            block_pixel_y=float(coord_block_pixel[1])
+            block_pixel_theta=0#float(coord_block_pixel[2])
+            real_base=self.pixel_to_real_pink_approach(block_pixel_x,block_pixel_y,block_pixel_theta)
+            real_base=np.append(real_base,np.array([[block_pixel_theta]]),axis=0)
+            rospy.loginfo(str(real_base))
+            
+            self.target_publisher.publish(targetnumber+"&"+str(real_base[0][0])+"&"+str(real_base[1][0])+"&"+str(real_base[2][0])+"&"+str(real_base[3][0]))
 
                 
         

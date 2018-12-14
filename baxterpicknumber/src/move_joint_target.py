@@ -28,7 +28,7 @@ def converttoSE3(x,y,z,theta):
 
 placetimes=0
 place_areay=[-0.08,0,0.08]
-place_areax=[0.6,0.68,0.76]
+place_areax=[0.6,0.70,0.77]
 class Baxterpicknumber():
     def __init__(self):
         global place_areax
@@ -48,7 +48,7 @@ class Baxterpicknumber():
                                                    moveit_msgs.msg.DisplayTrajectory,
                                                    queue_size=20)
 
-        # self.moving_publisher = rospy.Publisher('amimoving',String, queue_size=10)
+        self.moving_publisher = rospy.Publisher('amimoving',String, queue_size=10)
         rospy.sleep(3.0)
 
         self.planning_frame = self.right_arm_group.get_planning_frame()
@@ -85,7 +85,7 @@ class Baxterpicknumber():
         # self.left_gripper.calibrate()
       
         #Standoff hight above the block
-        self.standoff=0.15
+        self.standoff=0.2
 
         #Screw axis for Right arm of Baxter
 
@@ -107,10 +107,10 @@ class Baxterpicknumber():
         self.__right_sensor=rospy.Subscriber('/robot/range/right_hand_range/state',Range,self.rangecallback)
         self.rangestatetemp=Range()
         #subscribe to target location topic
-
-        self.location_data=rospy.Subscriber('square_location',String,self.compute_cartesian)
         self.grabcamera()
         self.go_startpose()
+        self.location_data=rospy.Subscriber('square_location',String,self.compute_cartesian)
+        # self.compute_cartesian()
     def grabcamera(self):
     #     self.putcamerapose= {'left_s0': -np.pi/4,
     #                         'left_s1':  -np.pi/12,
@@ -144,6 +144,8 @@ class Baxterpicknumber():
         self.rangestate=self.rangestatetemp.range
     
     def go_startpose(self):
+        self.move="0"
+        self.moving_publisher.publish(self.move)
         global placetimes
         # self.moving='1'
         # self.moving_publisher(self.moving)
@@ -160,12 +162,12 @@ class Baxterpicknumber():
         plan=self.right_arm_group.plan()
         self.right_arm_group.go()
 
-        rospy.sleep(1.0)
-        if placetimes>0:
-            rospy.loginfo("==========Ready to fetch another number, Press 'Enter' to cotinue=======")
-            raw_input()
-            self.standbypose()
-        else: self.standbypose()
+        # rospy.sleep(1.0)
+        # if placetimes>0:
+        #     rospy.loginfo("==========Ready to fetch another number, Press 'Enter' to cotinue=======")
+        #     raw_input()
+        #     self.standbypose()
+        self.standbypose()
     def standbypose(self):
         global placetimes
         if placetimes <3:
@@ -190,29 +192,33 @@ class Baxterpicknumber():
     def compute_cartesian(self,data):
         # self.moving='0'
         # self.moving_publisher(self.moving)
-        #testingdata=np.array([1, 0.55597888,-0.24354399,-0.3,0])
-        #data=testingdata
+        # testingdata=np.array([1, 0.55597888,-0.24354399,-0.3,0])
+        # data=testingdata
         data = data.data.split('&')
         fetchnumber=float(data[0])
-        rospy.loginfo("=============Trying to fetch number   " + str(fetchnumber) + "   Press 'Enter' to confirm==============")
-        raw_input()
-        # data=data.data.split('&')
-        
-        rospy.loginfo("==============Received desired position")
-        #extract x,y,z coordinate from subscriber data
-        self.x_coord=float(data[1])-0.06
-        rospy.loginfo(str(self.x_coord))
-        self.y_coord=float(data[2])+0.04
-        rospy.loginfo(str(self.y_coord))
-        self.z_coord=-0.3
-        self.theta= 0
+        # rospy.loginfo("=============Trying to fetch number   " + str(fetchnumber) + "   Press 'Enter' to confirm==============")
+        confirm=raw_input("=============Trying to fetch number   " + str(fetchnumber) + "   Press 'y/n' to confirm==============")
+        # confirm ='y'
+        if confirm=="y":
 
-        self.pose_target=converttoSE3(self.x_coord,self.y_coord,self.z_coord,self.theta)
-        try:
+                        
+            rospy.loginfo("==============Received desired position")
+            #extract x,y,z coordinate from subscriber data
+            self.x_coord=float(data[1])-0.020
+            # rospy.loginfo(str(self.x_coord))
+            self.y_coord=float(data[2])+0.038
+            # rospy.loginfo(str(self.y_coord))
+            self.z_coord=-0.3
+            self.theta= 0
+
+            self.pose_target=converttoSE3(self.x_coord,self.y_coord,self.z_coord,self.theta)
+            # try:
             self.move_arm_standoff()
-        except:
-            print("Fuck")
+        else:
             self.go_startpose()
+        # except:
+            # self.right_gripper.open()
+            # self.go_startpose()
     def move_arm_standoff(self):
 
         pose_target=converttoSE3(self.x_coord,self.y_coord,self.z_coord+self.standoff,self.theta)
@@ -224,26 +230,33 @@ class Baxterpicknumber():
         if joint_targettemp[1]== True:
             rospy.loginfo("Solution Found! Joint target value computed successfully.")
             print(joint_targettemp[0])
-            self.pickstandoff_joint_target={'right_s0': joint_targettemp[0][0]+0.05,
+            self.pickstandoff_joint_target={'right_s0': joint_targettemp[0][0],#+0.05,
                                             'right_s1': joint_targettemp[0][1],
                                             'right_e0': joint_targettemp[0][2],
                                             'right_e1': joint_targettemp[0][3],
                                             'right_w0': joint_targettemp[0][4],
                                             'right_w1': joint_targettemp[0][5],
                                             'right_w2': joint_targettemp[0][6]}
-            try:
+            # try:
 
-                self.right_arm_group.set_joint_value_target(self.pickstandoff_joint_target)
-                rospy.loginfo("Attempting to go to pick stand off position")
-            except:
-                self.go_startpose()
+            self.right_arm_group.set_joint_value_target(self.pickstandoff_joint_target)
+            rospy.loginfo("Attempting to go to pick stand off position")
             plan=self.right_arm_group.plan()
             self.right_arm_group.go()
+            rospy.sleep(1.0)
+            self.move_arm_pick()
+
+            # except:
+            #     self.right_gripper.open()
+            #     self.go_startpose()
+            
+            
         else:
             rospy.logerr("Could not find valid joint target value, returnning to Initial position")
+            self.right_gripper.open()
             self.go_startpose()
         
-        self.move_arm_pick()
+        
         
     def move_arm_pick(self):
         pose_target=converttoSE3(self.x_coord,self.y_coord,self.z_coord,self.theta)
@@ -274,15 +287,17 @@ class Baxterpicknumber():
             self.right_arm_group.go()
             rospy.sleep(1.0)
             print(self.rangestate)
-            if self.rangestate < 0.1:
+            if self.rangestate < 0.2:
                 self.right_gripper.close()
             else:
                 self.right_gripper.open()
+            self.move_arm_backstandoff()
         else:
             rospy.logerr("Could not find valid joint target value, returnning to Initial position")
+            self.right_gripper.open()
             self.go_startpose()
-        rospy.sleep(1.0)
-        self.move_arm_backstandoff()
+        
+        # self.move_arm_backstandoff()
     def move_arm_backstandoff(self):
         theta0list=np.array([self.pick_joint_target['right_s0'],
                             self.pick_joint_target['right_s1'],
@@ -312,19 +327,21 @@ class Baxterpicknumber():
             plan=self.right_arm_group.plan()
             self.right_arm_group.go()
             rospy.sleep(1.0)
-            if self.rangestate< 0.1:
+            if self.rangestate< 0.3:
                 self.right_gripper.close()
+                self.move_arm_standoff2()
 
             else:
-                rospy.loginfo("Sorry, I drop the block, returning to start pose")
+                rospy.loginfo("=========Sorry, I drop the block, returning to start pose=====")
                 self.right_gripper.open()
                 self.go_startpose()
+            
         else:
             rospy.logerr("Could not find valid joint target value, returnning to Initial position")
             self.right_gripper.open()
             self.go_startpose()
-        rospy.sleep(1.0)
-        self.move_arm_standoff2()
+        
+        
 
     def move_arm_standoff2(self):
         theta0list=np.array([self.pickbackstandoff_joint_target['right_s0'],
@@ -357,18 +374,20 @@ class Baxterpicknumber():
             plan=self.right_arm_group.plan()
             self.right_arm_group.go()
             rospy.sleep(1.0)
-            if self.rangestate< 0.1:
+            if self.rangestate< 0.3:
                 self.right_gripper.close()
+                self.move_arm_place()
             else:
                 rospy.loginfo("Sorry, I drop the block, return to start pose")
                 self.right_gripper.open()
                 self.go_startpose()
+            
         else:
             rospy.logerr("Could not find valid joint target value, returnning to Initial position")
             self.right_gripper.open()
             self.go_startpose() 
-        rospy.sleep(1.0)       
-        self.move_arm_place()
+        # rospy.sleep(1.0)       
+        
     def move_arm_place(self):
         global placetimes
         pose_target=converttoSE3(self.placex_coord,self.placey_coord,self.z_coord,0)
@@ -398,13 +417,14 @@ class Baxterpicknumber():
             plan=self.right_arm_group.plan()
             self.right_arm_group.go()
             placetimes = placetimes+1 
-            print(placetimes)
-
+            self.right_gripper.open()
+            # print(placetimes)
+            self.move_arm_backstandoff2()
         else:
             rospy.logerr("Could not find valid joint target value")   
-        self.right_gripper.open()
+            self.go_startpose()
                    
-        self.move_arm_backstandoff2()
+        
     def move_arm_backstandoff2(self):
         theta0list=np.array([self.place_joint_target['right_s0'],
                             self.place_joint_target['right_s1'],
@@ -436,10 +456,11 @@ class Baxterpicknumber():
             self.right_arm_group.go()
             
             self.right_gripper.open()
+            self.go_startpose()
             
         else:
             rospy.logerr("Could not find valid joint target value")  
-        self.go_startpose()
+            self.go_startpose()
 
 def main():
     rospy.init_node("moveit_baxter_pickandplace",anonymous=True)

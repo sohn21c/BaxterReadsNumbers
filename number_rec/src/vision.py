@@ -21,22 +21,6 @@ bridge = CvBridge()
 new_image = 0
 preds = 0
 
-def getBestShift(img):
-    cy,cx = ndimage.measurements.center_of_mass(img)
-
-    rows,cols = img.shape
-    shiftx = np.round(cols/2.0-cx).astype(int)
-    shifty = np.round(rows/2.0-cy).astype(int)
-
-    return shiftx,shifty
-
-def shift(img,sx,sy):
-    rows,cols = img.shape
-    M = np.float32([[1,0,sx],[0,1,sy]])
-    shifted = cv2.warpAffine(img,M,(cols,rows))
-    return shifted
-
-
 def main(cap):
     global preds
     global blocks
@@ -58,6 +42,16 @@ def main(cap):
     rvmax = cv2.getTrackbarPos('redValueMax','Filter')
     ############################################
 
+    bhmin = cv2.getTrackbarPos('blueHueMin','Filter')
+    bsmin = cv2.getTrackbarPos('blueSaturationMin','Filter')
+    bvmin = cv2.getTrackbarPos('blueValueMin','Filter')
+
+    bhmax = cv2.getTrackbarPos('blueHueMax','Filter')
+    bsmax = cv2.getTrackbarPos('blueSaturationMax','Filter')
+    bvmax = cv2.getTrackbarPos('blueValueMax','Filter')
+
+    ############################################
+
     #get values from trackbars for tolerance of hsv values (YELLOW)
     yhmin = cv2.getTrackbarPos('yellowHueMin','Filter')
     ysmin = cv2.getTrackbarPos('yellowSaturationMin','Filter')
@@ -72,6 +66,10 @@ def main(cap):
     min_red_vales = np.array([rhmin,rsmin,rvmin])
     max_red_vales = np.array([rhmax,rsmax,rvmax])
     ############################################
+    min_blue_vales = np.array([bhmin,bsmin,bvmin])
+    max_blue_vales = np.array([bhmax,bsmax,bvmax])
+
+    ###########################################
 
     #Take values from trackbars for filtering Yellow
     min_yellow_vales = np.array([yhmin,ysmin,yvmin])
@@ -81,6 +79,8 @@ def main(cap):
     ##create mask for only red
     maskRed = cv2.inRange(hsv, min_red_vales, max_red_vales)
     ########################################################
+    maskBlue = cv2.inRange(hsv, min_blue_vales, max_blue_vales)
+    #########################################################
 
     ##create mask for only yellow
     maskYellow = cv2.inRange(hsv, min_yellow_vales, max_yellow_vales)
@@ -97,8 +97,13 @@ def main(cap):
     y_dilation = cv2.dilate(y_erosion,kernel,iterations = 1)#Dilate
     #final result is dilation
 
+    b_erosion = cv2.erode(maskBlue,kernel,iterations = 1)#Erode
+    b_dilation = cv2.dilate(b_erosion,kernel,iterations = 1)#Dilate
+
     #red contours found from dilation. used to produce bounding box
     redContours = cv2.findContours(r_dilation.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
+
+    blueContours = cv2.findContours(b_dilation.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
 
     #yellow contours found from dilation. used to produce bounding box
     yellowContours = cv2.findContours(y_dilation.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
@@ -109,6 +114,21 @@ def main(cap):
     blocks = dict()
     frame1  = frame
     count = -1
+    RED = (0, 0, 255)
+    if len(redContours)>1:
+        blueCont = max(redContours, key=cv2.contourArea)
+        blueRect = cv2.minAreaRect(blueCont)
+        blueBox = np.int0(cv2.boxPoints(blueRect)) 
+        ((xblue,yblue),radiusblue) =cv2.minEnclosingCircle(blueCont)
+        if radiusblue>25 and radiusblue<80:
+            cv2.drawContours(frame1,[blueBox],0,RED,1)
+            pub = rospy.Publisher('/pink_block', String, latch=True, queue_size=1)
+            pub.publish(str(blueRect[1][1]))
+            pub2 = rospy.Publisher('/pink_block_loc', String, latch=True, queue_size=1)
+            pub2.publish(str(xblue)+"&"+str(yblue))
+
+
+
     if len(yellowContours) > 1:
         if (len(yellowContours)>10):
             num_items = 10
@@ -127,7 +147,7 @@ def main(cap):
             number = (frame[int(rect[0][1]-(rect[1][1]/2.5)):int((rect[1][1]/2.5)+rect[0][1]), int(rect[0][0]-(rect[1][0]/2.5)):int((rect[1][0]/2.5)+rect[0][0])])
             number = cv2.flip(number, 1)
             boo = False
-            if(radius > 30):
+            if(radius > 15 and radius < 50):
                 count = count + 1
                 cv2.drawContours(frame,[box],0,(0,0,0),1)
                 #gray = number
@@ -146,19 +166,19 @@ def main(cap):
                 if (count==0):
                     print(0)
                     prediction_arr = conf_arr
-                    blocks[str(count)] = (x,y,radius)
+                    blocks[str(count)] = (x,y,(rect[1][1],rect[1][0]))
                 else:
                     print(1)
                     prediction_arr = np.concatenate((prediction_arr,conf_arr), axis=0)
-                    blocks[str(count)] = (x,y,radius)
+                    blocks[str(count)] = (x,y)
 
 
             boo = True
             order = sorted(confidences, key=confidences.__getitem__, reverse=True)
         try:
-        	preds = prediction_management(prediction_arr)
+            preds = prediction_management(prediction_arr)
         except:
-        	print("no yellow blocks")
+            print("no yellow blocks")
         print(preds)
         print(blocks)
         for key in preds:
@@ -179,7 +199,7 @@ def main(cap):
 
 # get the file path for rospy_tutorials
     path = rospack.get_path('baxter_fun')
-    cv2.imshow('Red',r_dilation)
+    cv2.imshow('Blue',b_dilation)
     cv2.imshow('Yellow',y_dilation)
     cv2.imshow('Tracker',frame1)
     frame2 = cv2.resize(frame1, (600, 1024))
@@ -187,8 +207,8 @@ def main(cap):
     pub = rospy.Publisher('/robot/xdisplay', Image, latch=True, queue_size=1)
     pub.publish(msg)
     if(box_bool):
-    	cv2.imshow('Number', number)
-    	cv2.imshow('Numbers', gray)
+        cv2.imshow('Number', number)
+        cv2.imshow('Numbers', gray)
 
 
 def nothing(self):
@@ -201,7 +221,7 @@ def build():
     #Create trakbars for filtering Red
     cv2.createTrackbar('redHueMin','Filter',101,179,nothing)
     cv2.createTrackbar('redSaturationMin','Filter',56,255,nothing)
-    cv2.createTrackbar('redValueMin','Filter',56,255,nothing)
+    cv2.createTrackbar('redValueMin','Filter',71,255,nothing)
 
     cv2.createTrackbar('redHueMax','Filter',179,179,nothing)
     cv2.createTrackbar('redSaturationMax','Filter',255,255,nothing)
@@ -263,13 +283,13 @@ def listener():
      # spin() simply keeps python from exiting until this node is stopped
 
 # def keras_model():
-# 	yaml_file = open('CNN1.yaml', 'r')
-# 	loaded_model_yaml = yaml_file.read()
-# 	yaml_file.close()
-# 	loaded_model = model_from_yaml(loaded_model_yaml)
-# 	# load weights into new model
-# 	loaded_model.load_weights("model.h5")
-# 	print("Loaded model from disk")
+#   yaml_file = open('CNN1.yaml', 'r')
+#   loaded_model_yaml = yaml_file.read()
+#   yaml_file.close()
+#   loaded_model = model_from_yaml(loaded_model_yaml)
+#   # load weights into new model
+#   loaded_model.load_weights("model.h5")
+#   print("Loaded model from disk")
 
 def model(x,w):
     fx = x.flatten()
@@ -292,31 +312,31 @@ def multiclass_softmax(w,x,y):
     return cost/float(np.size(y))
 
 def classo(X):
-	rospack = rospkg.RosPack()
-	path = rospack.get_path('baxter_fun')
-	weights = np.genfromtxt(path+'/src/weights.csv',delimiter=',')
-	mean = np.mean(X)
-	std = np.std(X)
-	X = ((X-mean)/std)
-	pred = np.argmax(model(X,weights))
-	pred_arr = model(X,weights)
-	if (pred_arr[pred]>2):
-		pass
-		#rospy.loginfo(pred_arr)
-		#rospy.loginfo(pred)
-	return(pred,pred_arr[pred],pred_arr)
+    rospack = rospkg.RosPack()
+    path = rospack.get_path('baxter_fun')
+    weights = np.genfromtxt(path+'/src/weights.csv',delimiter=',')
+    mean = np.mean(X)
+    std = np.std(X)
+    X = ((X-mean)/std)
+    pred = np.argmax(model(X,weights))
+    pred_arr = model(X,weights)
+    if (pred_arr[pred]>2):
+        pass
+        #rospy.loginfo(pred_arr)
+        #rospy.loginfo(pred)
+    return(pred,pred_arr[pred],pred_arr)
 
 def images():
-	img0 = cv2.imread('0.png',0)
-	img1 = cv2.imread('1.png',0)
-	img2 = cv2.imread('2.png',0)
-	img3 = cv2.imread('3.png',0)
-	img4 = cv2.imread('4.png',0)
-	img5 = cv2.imread('5.png',0)
-	img6 = cv2.imread('6.png',0)
-	img7 = cv2.imread('7.png',0)
-	img8 = cv2.imread('8.png',0)
-	img9 = cv2.imread('9.png',0)
+    img0 = cv2.imread('0.png',0)
+    img1 = cv2.imread('1.png',0)
+    img2 = cv2.imread('2.png',0)
+    img3 = cv2.imread('3.png',0)
+    img4 = cv2.imread('4.png',0)
+    img5 = cv2.imread('5.png',0)
+    img6 = cv2.imread('6.png',0)
+    img7 = cv2.imread('7.png',0)
+    img8 = cv2.imread('8.png',0)
+    img9 = cv2.imread('9.png',0)
 
 # pass dictionary of form {"1":[x,y,prediction_arr],...}
 
@@ -333,14 +353,14 @@ def prediction_management(arr):
     return(dictionary)
 
 def return_position(req):
+    global preds
     req = req.str
     block = int(req)
-    try:
-        for key in preds:
-            if preds[key]==block:
-                loc = str(blocks[str(key)][0])+"&"+str(blocks[str(key)][1])
-    except:
-    	loc = 'Na'
+    loc = "Na"
+    for key in preds:
+        if preds[key]==block:
+            print("yes")
+            loc = str(blocks[str(key)][0])+"&"+str(blocks[str(key)][1])+"&"+str(blocks[str(key)][2][0])+"&"+str(blocks[str(key)][2][0])
     return loc
 
 
@@ -351,12 +371,10 @@ if __name__ == '__main__':
     build()
     s = rospy.Service('blockLocator', BlockLocator, return_position)
     while not rospy.is_shutdown():
-    	try:
-        	var = cv2.imwrite('name.jpg', new_image)
-        	var = cv2.imread('name.jpg', 1)
-        	main(var)
-        except Exception as e: 
-        	print(e)
+        var = cv2.imwrite('name.jpg', new_image)
+        var = cv2.imread('name.jpg', 1)
+        main(var)
+        
 
 
         #main(new_image)
