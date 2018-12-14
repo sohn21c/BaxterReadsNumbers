@@ -82,4 +82,7 @@ Listed below is the series of commands to initiate the package and run.
   
 
 ## Issues 
-
+Listed below are issues may affect demo and proceed accuracy.
+- Light may affect number recognition process. Default background for written numbers is bright yellow, and pink for frame reference.
+- Camera calibration and offset may affect target position of desired number.
+- If target position is published wrong from `pixelconvert.py`, Baxter may not find a valid solution since such position are out of workspace
