@@ -69,7 +69,14 @@ Listed below is the series of commands to initiate the package and run.
     `rosrun baxterpicknumber pixelconvert.py`  
     
 - Launch move and pick node  
-    `roslaunch baxterpicknumber move_joint_target.launch`    
+    `roslaunch baxterpicknumber move_joint_target.launch`  
+ 
+- Run instruction after launch  
+  - Headup camera will show predictions of numbers in the workspace  
+  - Command line asks for remapping. If the number prediction looks correct, press `n` if not, press `y` for refresh.
+  - Input single digit or double digit number depending on `pixelconvert` node one chooses to run.  
+  - Confirm the number again by pressing enter
+  
   
 
 ## Issues 
