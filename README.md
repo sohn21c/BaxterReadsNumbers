@@ -7,6 +7,8 @@
 
 This repo contains ROS packages needed to allow Baxter, manufactured by Rethink Robotics, to perform robust block pick and place using single digit handwritten numbers on the object.  
 
+![baxterreadsnumbers](https://github.com/sohn21c/BaxterReadsNumbers/blob/master/images/IMG_3680.PNG?raw=true)
+
 ## Hardware
 - Baxter 
 - 1080p usb camera
