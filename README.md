@@ -61,12 +61,16 @@ One can find demo video [here](https://drive.google.com/file/d/18wlpZJT8PQiyQPO6
 ### Package run instruction
 Listed below is the series of commands to initiate the package and run.
 - Connection to Baxter: One can find detailed insturction of workstation setup [here](http://sdk.rethinkrobotics.com/wiki/Workstation_Setup)  
+  
 - Launch usbcamera and number recognition node   
     `roslaunch baxter_fun numberrecog.launch`  
+    
 - Launch coordinate conversion  node  
     `rosrun baxterpicknumber pixelconvert.py`  
+    
 - Launch move and pick node  
     `roslaunch baxterpicknumber move_joint_target.launch`    
   
 
 ## Issues 
+
