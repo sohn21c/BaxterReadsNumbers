@@ -43,7 +43,7 @@ The functionality of the package consists of two individual packages that are no
 `ar_tracker_launch`: This starts the `individualMarkersNoKinect`nodes from the `ar_track alvar package`
 
 ##### Nodes
-`vision.py`: This node subscribes to the topic posted by usb_cam from the overhead usb camera and uses opencv to extract the yellow squares and preprocess them so that they can be used for number recognition that was trained on MNIST numbers (28 pixels by 28 pixels, white number on black background) It also finds the pink square in pixel co-ordinates which is used for localisation to the ar tag. This node provides the pixel co-ordinates of a given number via the blockLocator service, It also publishes the poxel co-ordinates of the pink block to `/pink_block_loc` and the size of the pink block to pink to `/pink_block` 
+`vision2.py`: This node subscribes to the topic posted by usb_cam from the overhead usb camera and uses opencv to extract the yellow squares and preprocess them so that they can be used for number recognition that was trained on MNIST numbers (28 pixels by 28 pixels, white number on black background) It also finds the pink square in pixel co-ordinates which is used for localisation to the ar tag. This node provides the pixel co-ordinates of a given number via the blockLocator service, It also publishes the poxel co-ordinates of the pink block to `/pink_block_loc` and the size of the pink block to pink to `/pink_block` 
 
 ##### Services
 `blockLocator.srv`: this service uses a string to request a number and retruns a string with the x pixel co-ordinate, y co-ordinate, the width and the length of teh block in that order all seperated by '&'s
@@ -71,11 +71,11 @@ The functionality of the package consists of two individual packages that are no
 ### Demo video
 One can find demo video [here](https://drive.google.com/file/d/18wlpZJT8PQiyQPO6wGeEcdG6VCEspOpR/view)  
 
-### Package run instruction
+### Project run instruction
 Listed below is the series of commands to initiate the packages and run the required nodes and launch files.
 - Connection to Baxter: One can find detailed insturction of workstation setup [here](http://sdk.rethinkrobotics.com/wiki/Workstation_Setup)  
   
-- Launch usb_cam and number recognition (`vision.py`) node   
+- Launch usb_cam and number recognition (`vision2.py`) node   
     `roslaunch baxter_fun numberrecog.launch`  
     
 - Launch coordinate conversion  node  
