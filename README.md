@@ -30,10 +30,11 @@ This repo contains ROS packages needed to allow Baxter, manufactured by Rethink 
 - [camera_info_manager_py](http://wiki.ros.org/camera_info_manager_py)
 
 ### High level description
-The functionality of the package consists of two individual packages that are not listed in the required package list.  
-`baxterpicknumber` and `number_rec`. Below is the simpe explanation of what each package does.
+The functionality of the package consists of three individual packages that are not listed in the required package list.  
+`baxterpicknumber` ,`number_rec`, and `face_detection`. Below is the simpe explanation of what each package does.
 - `numberrecog`: Uses machine learning to predict which blocks say what number.
 - `baxterpicknumber`: Subscribes to the topics posted by `vision.py` and calls the blockLocator service displaying relative position of the object in the external usb camera frame, convert it to position of the object in real world and perform pick and place
+- `face_detection`: Uses OpenCV2 to recognize human face and relate specified number to corresponding face. Human face will eventually become input for Baxter to know which block to pick.
 
 ### Package breakdown
 #### `number_rec`
@@ -66,6 +67,15 @@ The functionality of the package consists of two individual packages that are no
 
 `move_motionplann.py`(optional): is another approach to motion plan with moveit's built-in motion planner.  
 
+#### `face_detection`
+##### Nodes
+
+`video_capture.py`: uses webcam to capture a person's facial data. It will store frames in video stream as .jpg images to a folder with certain label corresponding to that person.
+
+`face_recognition.py`:contains functions needed for `face_rec.py`. Including function to obtain image data from folders and store them into arrays, function to detect how many human faces existing in webcam's screen, etc.
+
+`face_rec.py`:this node contains functions for training images stored in the image folder to create a .yml training data. Then it will use that training data to predict human faces shown in the webcam, and relate them with stored label(that person's name), and send corresponding number to Baxter. 
+
 
 ## Demo video and package run instruction
 ### Demo video
@@ -96,3 +106,4 @@ Listed below are issues may affect demo and proceed accuracy.
 - Light may affect number recognition process. Default background for written numbers is bright yellow, and pink for frame reference.
 - Camera calibration and offset may affect target position of desired number.
 - If target position is published wrong from `pixelconvert.py`, Baxter may not find a valid solution since such position are out of workspace
+- At the end of this project, the face recognition feature was not added to the whole procedure for performance concerns. However, that package can still recognize faces perfectly. A topic need to be created for sending the number corresponding to certain person's face to the `move_joint_target.py` node.
