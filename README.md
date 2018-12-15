@@ -36,19 +36,25 @@ The functionality of the package consists of two individual packages that are no
 - `baxterpicknumber`: Subscribes to the topics posted by `vision.py` and calls the blockLocator service displaying relative position of the object in the external usb camera frame, convert it to position of the object in real world and perform pick and place
 
 ### Package breakdown
+#### `number_rec`
+##### Launch files
+`roslaunch number_rec numberrecog.launch`: Starts usb_cam with the required arguments, It also starts the vision.py node . This launch file also starts publishing the camera calibration data for baxters left hand.
 
+`ar_tracker_launch`: This starts the `individualMarkersNoKinect`nodes from the `ar_track alvar package`
+
+##### Nodes
+`vision.py`: This node subscribes to the topic posted by usb_cam from the overhead usb camera and uses opencv to extract the yellow squares and preprocess them so that they can be used for number recognition that was trained on MNIST numbers (28 pixels by 28 pixels, white number on black background) It also finds the pink square in pixel co-ordinates which is used for localisation to the ar tag. This node provides the pixel co-ordinates of a given number via the blockLocator service, It also publishes the poxel co-ordinates of the pink block to `/pink_block_loc` and the size of the pink block to pink to `/pink_block` 
 
 ##### Services
 `blockLocator.srv`: this service uses a string to request a number and retruns a string with the x pixel co-ordinate, y co-ordinate, the width and the length of teh block in that order all seperated by '&'s
 
+##### Extras
+`weights.csv`: this file contains the weights for the machine learning algorithm trained to recognise hand written digits
+
 #### `baxterpicknumber`  
 ##### Launch files
-`roslaunch baxter_fun numberrecog.launch`: Starts usb_cam with the required arguments, It also starts the vision.py node.
 
 `move_joint_target.launch`: initiates MoveIt!, Baxterinterface and Rviz
-
-##### Nodes
-`vision.py`: This node subscribes to the topic posted by usb_cam from the overhead usb camera and uses opencv to extract the yellow squares and preprocess them so that they can be used for number recognition that was trained on MNIST numbers (28 pixels by 28 pixels, white number on black background) It also finds the pink square in pixel co-ordinates which is used for localisation to the ar tag. This node provides the pixel co-ordinates of a given number via the blockLocator service, It also publishes the poxel co-ordinates of the pink block to `/pink_block_loc` and the size of the pink block to pink to `/pink_block` 
 
 `move_joint_target.py`: uses [Modern_robotics library ](https://github.com/NxRLab/ModernRobotics) to solve inverse kinematics to maneuver Baxter's right gripper to designated location, grab the object and place it to designated drop off zone.  
 
